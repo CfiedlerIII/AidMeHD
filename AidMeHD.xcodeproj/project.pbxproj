@@ -11,6 +11,8 @@
 		1DCC9F552F5FAE2400A2008F /* FirebaseAuthCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 1DCC9F542F5FAE2400A2008F /* FirebaseAuthCombine-Community */; };
 		1DCC9F592F5FAE7200A2008F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 1DCC9F582F5FAE7200A2008F /* GoogleSignIn */; };
 		1DCC9F5B2F5FAE7200A2008F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1DCC9F5A2F5FAE7200A2008F /* GoogleSignInSwift */; };
+		1DCC9FB72F61384200A2008F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1DCC9FB62F61384200A2008F /* FirebaseFirestore */; };
+		1DCC9FB92F61384200A2008F /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 1DCC9FB82F61384200A2008F /* FirebaseFirestoreCombine-Community */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +77,8 @@
 				1DCC9F532F5FAE2400A2008F /* FirebaseAuth in Frameworks */,
 				1DCC9F552F5FAE2400A2008F /* FirebaseAuthCombine-Community in Frameworks */,
 				1DCC9F592F5FAE7200A2008F /* GoogleSignIn in Frameworks */,
+				1DCC9FB92F61384200A2008F /* FirebaseFirestoreCombine-Community in Frameworks */,
+				1DCC9FB72F61384200A2008F /* FirebaseFirestore in Frameworks */,
 				1DCC9F5B2F5FAE7200A2008F /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -140,6 +144,8 @@
 				1DCC9F542F5FAE2400A2008F /* FirebaseAuthCombine-Community */,
 				1DCC9F582F5FAE7200A2008F /* GoogleSignIn */,
 				1DCC9F5A2F5FAE7200A2008F /* GoogleSignInSwift */,
+				1DCC9FB62F61384200A2008F /* FirebaseFirestore */,
+				1DCC9FB82F61384200A2008F /* FirebaseFirestoreCombine-Community */,
 			);
 			productName = AidMeHD;
 			productReference = 1DF219012F5A0C1B009801BD /* AidMeHD.app */;
@@ -636,6 +642,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1DCC9F572F5FAE7200A2008F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		1DCC9FB62F61384200A2008F /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DCC9F512F5FAE2400A2008F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		1DCC9FB82F61384200A2008F /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DCC9F512F5FAE2400A2008F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFirestoreCombine-Community";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

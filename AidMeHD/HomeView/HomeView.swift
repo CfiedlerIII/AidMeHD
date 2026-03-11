@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
   @EnvironmentObject var authManager: AuthManager
+  @ObservedObject private var viewModel: HomeViewModel = .init()
   @State private var showLoginSheet = false
   @State private var showDeleteAccountAlert = false
 
@@ -33,6 +34,22 @@ struct HomeView: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
         .padding()
+
+        Button("Fetch Tasks") {
+          viewModel.fetchTasks()
+        }
+        .padding()
+        .background(Color(UIColor.systemGray4))
+        .clipShape(
+          RoundedRectangle(cornerRadius: 16)
+        )
+
+        TaskListView(viewModel: viewModel)
+          .overlay(
+            RoundedRectangle(cornerRadius: 16)
+              .stroke(Color.black, lineWidth: 2)
+          )
+          .opacity(viewModel.tasks.isEmpty ? 0 : 1)
 
         Spacer()
 
