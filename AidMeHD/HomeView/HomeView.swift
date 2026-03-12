@@ -36,8 +36,7 @@ struct HomeView: View {
         .padding()
 
         Button("Fetch Tasks") {
-//          viewModel.fetchTasks()
-          viewModel.fetchHousehold()
+          viewModel.fetchTasks()
         }
         .padding()
         .background(Color(UIColor.systemGray4))
