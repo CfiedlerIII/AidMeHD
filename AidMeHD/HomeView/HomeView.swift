@@ -36,7 +36,8 @@ struct HomeView: View {
         .padding()
 
         Button("Fetch Tasks") {
-          viewModel.fetchTasks()
+//          viewModel.fetchTasks()
+          viewModel.fetchHousehold()
         }
         .padding()
         .background(Color(UIColor.systemGray4))
@@ -49,7 +50,8 @@ struct HomeView: View {
             RoundedRectangle(cornerRadius: 16)
               .stroke(Color.black, lineWidth: 2)
           )
-          .opacity(viewModel.tasks.isEmpty ? 0 : 1)
+          .opacity(viewModel.tasks.isEmpty ? 0 : 1.0)
+          .animation(.easeInOut(duration: 0.33), value: viewModel.tasks.isEmpty)
 
         Spacer()
 
