@@ -55,7 +55,7 @@ struct HomeView: View {
         Spacer()
 
         HStack {
-          // Show `Sign out` iff user is not anonymous,
+          // Show `Sign out` if user is not anonymous,
           // otherwise show `Sign-in` to present LoginView() when tapped.
           Button {
             if authManager.authState != .signedIn {

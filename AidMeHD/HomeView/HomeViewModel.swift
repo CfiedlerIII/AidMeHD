@@ -30,37 +30,3 @@ class HomeViewModel: ObservableObject {
     }
   }
 }
-
-struct AidMeTask: Codable, Identifiable {
-  var id: String
-  var title: String
-  var description: String?
-  var isComplete: Bool
-
-  init(id: String, title: String, description: String? = nil, isComplete: Bool) {
-    self.id = id
-    self.title = title
-    self.description = description
-    self.isComplete = isComplete
-  }
-}
-
-struct Household: Codable, Identifiable {
-  var id: String
-  var memberIds: [String]
-  var tasks: [AidMeTask]
-
-  // Decodable init
-  init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    self.id = try container.decode(String.self, forKey: .id)
-    self.memberIds = try container.decode([String].self, forKey: .memberIds)
-    do {
-      tasks = try container.decode([AidMeTask].self, forKey: .tasks)
-    } catch {
-      print("Failed to decode household tasks: \(error)")
-      tasks = []
-      return
-    }
-  }
-}

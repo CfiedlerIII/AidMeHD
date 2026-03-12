@@ -46,6 +46,14 @@
 			);
 			target = 1DF219002F5A0C1B009801BD /* AidMeHD */;
 		};
+		1DCC9FF42F635A8900A2008F /* Exceptions for "AidMeHD" folder in "AidMeHDTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DataModels/AidMeTask.swift,
+				DataModels/Household.swift,
+			);
+			target = 1DF2190D2F5A0C1C009801BD /* AidMeHDTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -53,6 +61,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				1DCC9F712F5FB4A400A2008F /* Exceptions for "AidMeHD" folder in "AidMeHD" target */,
+				1DCC9FF42F635A8900A2008F /* Exceptions for "AidMeHD" folder in "AidMeHDTests" target */,
 			);
 			path = AidMeHD;
 			sourceTree = "<group>";
