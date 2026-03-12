@@ -10,6 +10,7 @@ import GoogleSignInSwift
 import SwiftUI
 
 struct LoginView: View {
+  @AppStorage("userId") var userId: String?
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.dismiss) var dismiss
 
@@ -74,6 +75,7 @@ struct LoginView: View {
       let result = try await authManager.googleAuth(user)
       if let result = result {
         print("GoogleSignInSuccess: \(result.user.uid)")
+        self.userId = result.user.uid
         dismiss()
       }
     }
@@ -98,6 +100,7 @@ struct LoginView: View {
             nonce: AppleSignInManager.nonce
           )
           if result != nil {
+            self.userId = result?.user.uid
             dismiss()
           }
         } catch {
