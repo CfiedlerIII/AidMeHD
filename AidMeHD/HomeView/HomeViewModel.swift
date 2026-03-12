@@ -10,81 +10,24 @@ import FirebaseFirestore
 import SwiftUI
 
 class HomeViewModel: ObservableObject {
-  @AppStorage("userId") var userId: String?
+  @ObservedObject var cloudService = CloudService.shared
   @Published var tasks: [AidMeTask] = []
-  private var db = Firestore.firestore()
-  private var listenerRegistration: ListenerRegistration?
+  private var cancellables: Set<AnyCancellable> = []
 
-  init(_ tasks: [AidMeTask] = []) {
-    self.tasks = tasks
+  deinit {
+    cancellables.removeAll()
   }
 
   func fetchTasks() {
-    listenerRegistration = db.collection("tasks").addSnapshotListener { (querySnapshot, error) in
-      guard let documents = querySnapshot?.documents else {
-        print("No documents: \(error?.localizedDescription ?? "Unknown error")")
-        return
-      }
-
-      // Automatically decodes documents into an array of Book objects
-      self.tasks = documents.compactMap { document in
-        do {
-          return try document.data(as: AidMeTask.self)
-        } catch {
-          print("Error decoding document: \(error)")
-          return nil
-        }
-      }
+    cancellables.removeAll()
+    Task {
+      await cloudService.$tasks
+        .debounce(for: 0.15, scheduler: DispatchQueue.main)
+        // Assign the output of the publisher to the destination property
+        .assign(to: \.tasks, on: self)
+        // Store the subscription in the cancellables set
+        .store(in: &cancellables)
     }
-  }
-
-  func fetchHousehold() {
-    guard let userId = userId else {
-      print("No valid userId found for query")
-      return
-    }
-    print("userId: \(userId)")
-    let db = Firestore.firestore()
-    db.collection("households")
-      .whereField("memberIds", arrayContains: userId)
-      .getDocuments { (querySnapshot, error) in
-        guard let documents = querySnapshot?.documents else {
-          print("No documents: \(error?.localizedDescription ?? "Unknown error")")
-          return
-        }
-        guard let matchingHousehold = documents.first else {
-          self.tasks = []
-          return
-        }
-        self.fetchTasksForHousehold(matchingHousehold)
-      }
-  }
-
-  func fetchTasksForHousehold(_ household: QueryDocumentSnapshot) {
-    listenerRegistration = household.reference.collection("tasks")
-      .addSnapshotListener { (querySnapshot, error) in
-        guard let documents = querySnapshot?.documents else {
-          print("No documents: \(error?.localizedDescription ?? "Unknown error")")
-          return
-        }
-
-        // Automatically decodes documents into an array of Household objects
-        let householdTasks: [AidMeTask] = documents.compactMap { document in
-          do {
-            return try document.data(as: AidMeTask.self)
-          } catch {
-            print("Error decoding document: \(error)")
-            return nil
-          }
-        }
-        print("Tasks: \(householdTasks)")
-        self.tasks = householdTasks
-      }
-  }
-
-  // Remember to remove the listener when it's no longer needed (e.g., in deinit or view disappearance)
-  deinit {
-    listenerRegistration?.remove()
   }
 }
 
@@ -106,4 +49,18 @@ struct Household: Codable, Identifiable {
   var id: String
   var memberIds: [String]
   var tasks: [AidMeTask]
+
+  // Decodable init
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.id = try container.decode(String.self, forKey: .id)
+    self.memberIds = try container.decode([String].self, forKey: .memberIds)
+    do {
+      tasks = try container.decode([AidMeTask].self, forKey: .tasks)
+    } catch {
+      print("Failed to decode household tasks: \(error)")
+      tasks = []
+      return
+    }
+  }
 }

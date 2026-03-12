@@ -36,8 +36,5 @@ struct TaskListView: View {
 }
 
 #Preview {
-  TaskListView(viewModel: .init([
-    AidMeTask(id: UUID().uuidString, title: "Wash Dishes", isComplete: false),
-    AidMeTask(id: UUID().uuidString, title: "Organize Bathroom", description: "The stuff in the linen closet and under the vanity need to find a home.", isComplete: true)
-  ]))
+  TaskListView(viewModel: .init())
 }
