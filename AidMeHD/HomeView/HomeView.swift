@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
   @EnvironmentObject var authManager: AuthManager
-  @ObservedObject private var viewModel: HomeViewModel = .init()
+  @ObservedObject private var viewModel: TasksViewModel = .init(dataService: CloudService.shared)
   @State private var showLoginSheet = false
   @State private var showDeleteAccountAlert = false
 
@@ -34,15 +34,6 @@ struct HomeView: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
         .padding()
-
-        Button("Fetch Tasks") {
-          viewModel.fetchTasks()
-        }
-        .padding()
-        .background(Color(UIColor.systemGray4))
-        .clipShape(
-          RoundedRectangle(cornerRadius: 16)
-        )
 
         TaskListView(viewModel: viewModel)
           .overlay(

@@ -49,8 +49,11 @@
 		1DCC9FF42F635A8900A2008F /* Exceptions for "AidMeHD" folder in "AidMeHDTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				DataModels/AidMeHousehold.swift,
 				DataModels/AidMeTask.swift,
-				DataModels/Household.swift,
+				DataModels/AidMeUser.swift,
+				DataModels/CloudServices/AidMeDataService.swift,
+				MKError.swift,
 			);
 			target = 1DF2190D2F5A0C1C009801BD /* AidMeHDTests */;
 		};

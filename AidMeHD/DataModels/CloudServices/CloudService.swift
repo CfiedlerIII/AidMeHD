@@ -5,16 +5,21 @@
 //  Created by Charles Fiedler on 3/12/26.
 //
 
+import Combine
 import FirebaseFirestore
 import SwiftUI
 
-actor CloudService: ObservableObject {
+actor CloudService: ObservableObject, @preconcurrency AidMeDataService {
   @AppStorage("userId") var userId: String?
-  @Published var user: DBUser?
-  @Published var household: Household?
+  @Published var user: AidMeUser?
+  @Published var household: AidMeHousehold?
   @Published var tasks: [AidMeTask] = []
   public static let shared: CloudService = CloudService()
   let database = Firestore.firestore()
+
+  var userPublisher: Published<AidMeUser?>.Publisher { $user }
+  var householdPublisher: Published<AidMeHousehold?>.Publisher { $household }
+  var taskPublisher: Published<[AidMeTask]>.Publisher { $tasks }
 
   // Listeners
   var userListener: ListenerRegistration?
@@ -22,8 +27,8 @@ actor CloudService: ObservableObject {
   var tasksListener: ListenerRegistration?
 
   private init() {
-    Task {
-      await fetchUser()
+    Task { @MainActor in
+      await fetchData()
     }
   }
 
@@ -33,7 +38,13 @@ actor CloudService: ObservableObject {
     tasksListener?.remove()
   }
 
-  func fetchUser() {
+  func fetchData() {
+    Task {
+      await fetchUser()
+    }
+  }
+
+  func fetchUser() async {
     guard let userId else { return }
 
     self.userListener = database
@@ -45,8 +56,10 @@ actor CloudService: ObservableObject {
           return
         }
         do {
-          self.user = try document.data(as: DBUser.self)
-          self.fetchHousehold()
+          self.user = try document.data(as: AidMeUser.self)
+          Task {
+            await self.fetchHousehold()
+          }
         } catch {
           print("Error decoding user: \(error)")
           return
@@ -54,9 +67,8 @@ actor CloudService: ObservableObject {
       }
   }
 
-  func fetchHousehold() {
-    guard let householdId = user?.householdId else { return }
-    print("HouseholdID: \(householdId)")
+  func fetchHousehold() async {
+    guard let householdId = await user?.householdId else { return }
 
     self.householdListener = database
       .collection("households")
@@ -67,7 +79,7 @@ actor CloudService: ObservableObject {
           return
         }
         do {
-          self.household = try document.data(as: Household.self)
+          self.household = try document.data(as: AidMeHousehold.self)
           self.fetchTasksForHousehold(document)
         } catch {
           print("Error decoding household: \(error)")
@@ -93,7 +105,9 @@ actor CloudService: ObservableObject {
             return nil
           }
         }
-        self.tasks = householdTasks
+        Task {
+          self.tasks = householdTasks
+        }
       }
   }
 
@@ -106,9 +120,13 @@ actor CloudService: ObservableObject {
       print("Error adding task: \(error.localizedDescription)")
     }
   }
-}
 
-struct DBUser: Codable, Identifiable {
-  var id: String
-  var householdId: String
+  func editTask(_ task: AidMeTask, inHousehold household: QueryDocumentSnapshot) {
+    do {
+      _ = try household.reference.collection("tasks").document(task.id).setData(from: task)
+      print("Task successfully edited!")
+    } catch {
+      print("Error editing task: \(error.localizedDescription)")
+    }
+  }
 }

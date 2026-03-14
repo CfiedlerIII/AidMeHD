@@ -5,8 +5,10 @@
 //  Created by Charles Fiedler on 3/12/26.
 //
 
-struct AidMeTask: Codable, Identifiable {
-  var id: String
+import Foundation
+
+actor AidMeTask: @preconcurrency Codable, Identifiable {
+  nonisolated let id: String
   var title: String
   var description: String?
   var isComplete: Bool
