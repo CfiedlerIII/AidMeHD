@@ -8,25 +8,17 @@
 import SwiftUI
 
 struct TaskListView: View {
-  @ObservedObject var viewModel: HomeViewModel
+  @ObservedObject var viewModel: TasksViewModel<CloudService>
 
-  init(viewModel: HomeViewModel) {
+  init(viewModel: TasksViewModel<CloudService>) {
     self.viewModel = viewModel
   }
+
   var body: some View {
     List {
       ForEach(viewModel.tasks) { task in
-        VStack(alignment: .leading) {
-          Text(task.title)
-          if let description = task.description, !description.isEmpty {
-            Divider()
-            Text(description)
-          }
-        }
+        TaskItemView(task: task)
         .listRowSeparator(.hidden)
-        .padding()
-        .background(task.isComplete ?  Color.green.opacity(0.33) : Color(UIColor.systemGray4))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
       }
     }
     .listStyle(.plain)
@@ -36,5 +28,5 @@ struct TaskListView: View {
 }
 
 #Preview {
-  TaskListView(viewModel: .init())
+  TaskListView(viewModel: .init(dataService: CloudService.shared))
 }

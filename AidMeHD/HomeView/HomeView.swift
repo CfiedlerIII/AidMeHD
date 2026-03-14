@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
   @EnvironmentObject var authManager: AuthManager
-  @ObservedObject private var viewModel: HomeViewModel = .init()
+  @ObservedObject private var viewModel: TasksViewModel = .init(dataService: CloudService.shared)
   @State private var showLoginSheet = false
   @State private var showDeleteAccountAlert = false
 
@@ -35,15 +35,6 @@ struct HomeView: View {
         .cornerRadius(12)
         .padding()
 
-        Button("Fetch Tasks") {
-          viewModel.fetchTasks()
-        }
-        .padding()
-        .background(Color(UIColor.systemGray4))
-        .clipShape(
-          RoundedRectangle(cornerRadius: 16)
-        )
-
         TaskListView(viewModel: viewModel)
           .overlay(
             RoundedRectangle(cornerRadius: 16)
@@ -55,7 +46,7 @@ struct HomeView: View {
         Spacer()
 
         HStack {
-          // Show `Sign out` iff user is not anonymous,
+          // Show `Sign out` if user is not anonymous,
           // otherwise show `Sign-in` to present LoginView() when tapped.
           Button {
             if authManager.authState != .signedIn {

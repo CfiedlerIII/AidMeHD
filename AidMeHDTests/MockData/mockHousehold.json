@@ -1,0 +1,28 @@
+{
+  "household": {
+    "id": "8e5aHNpCCbs1ShtHMYGc",
+    "memberIds": [
+      "0MFHz5Djh7grgTEhZMlVyFjZTRH2"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "qE5UjOu54lyaBX4cePKZ",
+      "title": "Kiss wife",
+      "description": "Giver' a big ol' smooch",
+      "isComplete": true
+    },
+    {
+      "id": "f86wJZFMFhCoO19O9ELm",
+      "title": "Wash Dishes",
+      "description": null,
+      "isComplete": true
+    },
+    {
+      "id": "EN1c7syRPnBbTwcj8VRI",
+      "title": "Landscaping",
+      "description": "Mow the lawn, trim the hedges, and rake the leaves.",
+      "isComplete": true
+    }
+  ]
+}
