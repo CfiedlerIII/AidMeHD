@@ -10,6 +10,7 @@ import FirebaseFirestore
 import SwiftUI
 
 actor CloudService: ObservableObject, @preconcurrency AidMeDataService {
+
   @AppStorage("userId") var userId: String?
   @Published var user: AidMeUser?
   @Published var household: AidMeHousehold?
@@ -24,18 +25,14 @@ actor CloudService: ObservableObject, @preconcurrency AidMeDataService {
   // Listeners
   var userListener: ListenerRegistration?
   var householdListener: ListenerRegistration?
-  var tasksListener: ListenerRegistration?
+  var taskListener: ListenerRegistration?
 
-  private init() {
-    Task { @MainActor in
-      await fetchData()
-    }
-  }
+  private init() {}
 
   deinit {
     userListener?.remove()
     householdListener?.remove()
-    tasksListener?.remove()
+    taskListener?.remove()
   }
 
   func fetchData() {
@@ -67,6 +64,31 @@ actor CloudService: ObservableObject, @preconcurrency AidMeDataService {
       }
   }
 
+  func setNewUser(userId: String) {
+    let householdId = UUID().uuidString
+    let userDocRef = database
+      .collection("users")
+      .document(userId)
+    let householdDocRef = database
+      .collection("households")
+      .document(householdId)
+
+    userDocRef.setData(["id":userId,"householdId":householdId]) { error in
+      if let error = error {
+        print("Error writing document: \(error.localizedDescription)")
+      } else {
+        print("User successfully written with ID: \(userId)")
+      }
+    }
+    householdDocRef.setData(["id":householdId,"memberIds":[userId]]) { error in
+      if let error = error {
+        print("Error writing document: \(error.localizedDescription)")
+      } else {
+        print("Household successfully written with ID: \(householdId)")
+      }
+    }
+  }
+
   func fetchHousehold() async {
     guard let householdId = await user?.householdId else { return }
 
@@ -89,7 +111,7 @@ actor CloudService: ObservableObject, @preconcurrency AidMeDataService {
   }
 
   func fetchTasksForHousehold(_ household: DocumentSnapshot) {
-    tasksListener = household.reference.collection("tasks")
+    taskListener = household.reference.collection("tasks")
       .addSnapshotListener { (querySnapshot, error) in
         guard let documents = querySnapshot?.documents else {
           print("No tasks: \(error?.localizedDescription ?? "Unknown error")")

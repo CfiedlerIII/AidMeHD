@@ -13,6 +13,12 @@ struct HomeView: View {
   @State private var showLoginSheet = false
   @State private var showDeleteAccountAlert = false
 
+  init() {
+    Task {
+      await CloudService.shared.fetchData()
+    }
+  }
+
   var body: some View {
     NavigationStack {
       VStack(spacing: 16) {

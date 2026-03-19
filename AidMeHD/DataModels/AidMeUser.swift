@@ -9,5 +9,10 @@ import Foundation
 
 actor AidMeUser: @preconcurrency Codable, Identifiable {
   nonisolated let id: String
-  var householdId: String
+  var householdId: String?
+
+  init(id: String, householdId: String?) {
+    self.id = id
+    self.householdId = householdId
+  }
 }
