@@ -82,7 +82,7 @@ struct LoginView: View {
 
         HStack {
           Button {
-            createNewUserWithEmailPassword()
+            runAccountWorkflow(isCreatingAccount: true)
           } label: {
             HStack {
               Spacer()
@@ -98,7 +98,7 @@ struct LoginView: View {
           .disabled(emailText.isEmpty || passwordText.isEmpty)
 
           Button {
-            signInWithEmailPassword()
+            runAccountWorkflow()
           } label: {
             HStack {
               Spacer()
@@ -122,57 +122,75 @@ struct LoginView: View {
       .background(.mint)
     }
   }
+
+  // Account sign-in workflow
+  func runAccountWorkflow(isCreatingAccount: Bool = false) {
+    guard emailText.isValidEmail() else {
+      let errorMessageText = "Email is invalid."
+      self.errorMessage = errorMessageText
+      print(errorMessageText)
+      return
+    }
+    guard passwordText.isEmpty else {
+      let errorMessageText = "Password is required."
+      self.errorMessage = errorMessageText
+      print(errorMessageText)
+      return
+    }
+    if isCreatingAccount {
+      createNewUserWithEmailPassword(emailText, passwordText)
+    } else {
+      signInWithEmailPassword(emailText, passwordText)
+    }
+  }
+
   /// Sign in with Emal and Password, and authenticate with `Firebase`.
-  func signInWithEmailPassword() {
-    if emailText.isValidEmail(), !passwordText.isEmpty {
-      Auth.auth().signIn(withEmail: emailText, password: passwordText) { authResult, error in
-        if let error = error as NSError? {
-          let errorMessageText = "Error signing in: \(error.localizedDescription)"
-          print("Error signing in: \(errorMessageText)")
-          self.errorMessage = errorMessageText
+  func signInWithEmailPassword(_ email: String, _ password: String) {
+    Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+      if let error = error as NSError? {
+        let errorMessageText = "Error signing in: \(error.localizedDescription)"
+        print("Error signing in: \(errorMessageText)")
+        self.errorMessage = errorMessageText
+        return
+      }
+
+      print("AuthSuccess: \(authResult!.user.uid)")
+      self.userId = authResult!.user.uid
+      dismiss()
+    }
+  }
+
+  func createNewUserWithEmailPassword(_ email: String, _ password: String) {
+    Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+      if let error = error as NSError? {
+        if error.code == AuthErrorCode.emailAlreadyInUse.rawValue {
+          return
+        } else {
+          // Handle other errors (e.g., invalid email, weak password, network issues)
+          print("Error creating user: \(error.localizedDescription)")
           return
         }
-
-        print("AuthSuccess: \(authResult!.user.uid)")
-        self.userId = authResult!.user.uid
-        dismiss()
       }
-    }
-  }
-
-  func createNewUserWithEmailPassword() {
-    if emailText.isValidEmail(), !passwordText.isEmpty {
-      Auth.auth().createUser(withEmail: emailText, password: passwordText) { authResult, error in
+      print("AuthSuccess: \(authResult!.user.uid)")
+      self.userId = authResult!.user.uid
+      // User created successfully
+      print("User created: \(authResult?.user.email ?? "")")
+      Task {
+        await cloudService.setNewUser(userId: authResult!.user.uid)
+      }
+      // Optionally, send a verification email
+      authResult?.user.sendEmailVerification { error in
+        // Handle verification email error or success
         if let error = error as NSError? {
-          if error.code == AuthErrorCode.emailAlreadyInUse.rawValue {
-            return
-          } else {
-            // Handle other errors (e.g., invalid email, weak password, network issues)
-            print("Error creating user: \(error.localizedDescription)")
-            return
-          }
+          print("Error sending email verification: \(error.localizedDescription)")
+        } else {
+          print("Email verification successfully sent")
         }
-        print("AuthSuccess: \(authResult!.user.uid)")
-        self.userId = authResult!.user.uid
-        // User created successfully
-        print("User created: \(authResult?.user.email ?? "")")
-        Task {
-          await cloudService.setNewUser(userId: authResult!.user.uid)
-        }
-        // Optionally, send a verification email
-        authResult?.user.sendEmailVerification { error in
-            // Handle verification email error or success
-          if let error = error as NSError? {
-            print("Error sending email verification: \(error.localizedDescription)")
-          } else {
-            print("Email verification successfully sent")
-          }
-        }
-        dismiss()
       }
+      dismiss()
     }
   }
-
+  
   /// Sign in with `Google`, and authenticate with `Firebase`.
   func signInWithGoogle() async {
     do {
