@@ -13,22 +13,26 @@ import FirebaseAuth
 struct LoginView: View {
   @AppStorage("userId") var userId: String?
   @Environment(\.colorScheme) var colorScheme
-  @Environment(\.dismiss) var dismiss
   @EnvironmentObject var authManager: AuthManager
-  let cloudService = CloudService.shared
+  @ObservedObject var viewModel: LoginViewModel<CloudService>
   @State var emailText: String = ""
   @State var passwordText: String = ""
   @State var errorMessage: String?
+  let cloudService = CloudService.shared
+
+  init(viewModel: LoginViewModel<CloudService>) {
+    self.viewModel = viewModel
+  }
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $viewModel.path) {
       VStack(spacing: 16) {
         Spacer()
         Text("AidMeHD")
           .font(.title)
           .fontWeight(.bold)
         Spacer()
-
+        
         TextField("Email", text: $emailText)
           .padding()
           .background(.white)
@@ -38,7 +42,7 @@ struct LoginView: View {
             RoundedRectangle(cornerRadius: 8)
               .stroke(errorMessage == nil ? .clear : .red, lineWidth: 2)
           )
-
+        
         SecureField("Password", text: $passwordText)
           .padding()
           .background(.white)
@@ -48,14 +52,14 @@ struct LoginView: View {
             RoundedRectangle(cornerRadius: 8)
               .stroke(errorMessage == nil ? .clear : .red, lineWidth: 2)
           )
-
+        
         if let errorMessageText = errorMessage {
           Text(errorMessageText)
             .foregroundColor(.red)
         }
-
+        
         Divider()
-
+        
         // MARK: - Apple
         SignInWithAppleButton(
           onRequest: { request in
@@ -68,7 +72,7 @@ struct LoginView: View {
         .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
         .frame(width: 280, height: 40, alignment: .center)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-
+        
         // MARK: - Google
         GoogleSignInButton {
           Task {
@@ -77,12 +81,12 @@ struct LoginView: View {
         }
         .frame(width: 280, height: 40, alignment: .center)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-
+        
         Divider()
-
+        
         HStack {
           Button {
-            runAccountWorkflow(isCreatingAccount: true)
+            createNewUserWithEmailPassword()
           } label: {
             HStack {
               Spacer()
@@ -96,9 +100,9 @@ struct LoginView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
           }
           .disabled(emailText.isEmpty || passwordText.isEmpty)
-
+          
           Button {
-            runAccountWorkflow()
+            signInWithEmailPassword()
           } label: {
             HStack {
               Spacer()
@@ -114,39 +118,31 @@ struct LoginView: View {
           .disabled(emailText.isEmpty || passwordText.isEmpty)
         }
         .frame(width: 280)
-
         Spacer()
       }
-      .padding()
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
       .background(.mint)
+      .navigationDestination(for: String.self) { value in
+        if value == "AccountSetup" {
+          AccountSetupView(showLoginSheet: $viewModel.showLoginSheet) // A view that takes a String
+        } else {
+          Text("Whoops! You shouldn't be here.")
+        }
+      }
     }
+    .padding()
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.mint)
   }
 
-  // Account sign-in workflow
-  func runAccountWorkflow(isCreatingAccount: Bool = false) {
+  /// Sign in with Emal and Password, and authenticate with `Firebase`.
+  func signInWithEmailPassword() {
     guard emailText.isValidEmail() else {
       let errorMessageText = "Email is invalid."
       self.errorMessage = errorMessageText
       print(errorMessageText)
       return
     }
-    guard passwordText.isEmpty else {
-      let errorMessageText = "Password is required."
-      self.errorMessage = errorMessageText
-      print(errorMessageText)
-      return
-    }
-    if isCreatingAccount {
-      createNewUserWithEmailPassword(emailText, passwordText)
-    } else {
-      signInWithEmailPassword(emailText, passwordText)
-    }
-  }
-
-  /// Sign in with Emal and Password, and authenticate with `Firebase`.
-  func signInWithEmailPassword(_ email: String, _ password: String) {
-    Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+    Auth.auth().signIn(withEmail: emailText, password: passwordText) { authResult, error in
       if let error = error as NSError? {
         let errorMessageText = "Error signing in: \(error.localizedDescription)"
         print("Error signing in: \(errorMessageText)")
@@ -155,42 +151,29 @@ struct LoginView: View {
       }
 
       print("AuthSuccess: \(authResult!.user.uid)")
-      self.userId = authResult!.user.uid
-      dismiss()
+      self.viewModel.signIn(userId: authResult!.user.uid)
+      viewModel.showLoginSheet = false
     }
   }
 
-  func createNewUserWithEmailPassword(_ email: String, _ password: String) {
-    Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
-      if let error = error as NSError? {
-        if error.code == AuthErrorCode.emailAlreadyInUse.rawValue {
-          return
+    func createNewUserWithEmailPassword() {
+      guard emailText.isValidEmail() else {
+        let errorMessageText = "Email is invalid."
+        self.errorMessage = errorMessageText
+        print(errorMessageText)
+        return
+      }
+      viewModel.createNewUser(email: emailText, password: passwordText) { error in
+        if let error = error {
+          let errorMessageText = "Error creating user: \(error.localizedDescription)"
+          self.errorMessage = errorMessageText
+          print(errorMessageText)
         } else {
-          // Handle other errors (e.g., invalid email, weak password, network issues)
-          print("Error creating user: \(error.localizedDescription)")
-          return
+          print("AuthSuccess: \(String(describing: self.userId))")
         }
       }
-      print("AuthSuccess: \(authResult!.user.uid)")
-      self.userId = authResult!.user.uid
-      // User created successfully
-      print("User created: \(authResult?.user.email ?? "")")
-      Task {
-        await cloudService.setNewUser(userId: authResult!.user.uid)
-      }
-      // Optionally, send a verification email
-      authResult?.user.sendEmailVerification { error in
-        // Handle verification email error or success
-        if let error = error as NSError? {
-          print("Error sending email verification: \(error.localizedDescription)")
-        } else {
-          print("Email verification successfully sent")
-        }
-      }
-      dismiss()
     }
-  }
-  
+
   /// Sign in with `Google`, and authenticate with `Firebase`.
   func signInWithGoogle() async {
     do {
@@ -200,7 +183,7 @@ struct LoginView: View {
       if let result = result {
         print("GoogleSignInSuccess: \(result.user.uid)")
         self.userId = result.user.uid
-        dismiss()
+        viewModel.showLoginSheet = false
       }
     }
     catch {
@@ -225,7 +208,7 @@ struct LoginView: View {
           )
           if result != nil {
             self.userId = result?.user.uid
-            dismiss()
+            viewModel.showLoginSheet = false
           }
         } catch {
           print("AppleAuthorization failed: \(error)")
@@ -238,22 +221,9 @@ struct LoginView: View {
       // Here you can show error message to user.
     }
   }
-
-  /// Sign-in anonymously
-  func signAnonymously() {
-    Task {
-      do {
-        let result = try await authManager.signInAnonymously()
-        print("SignInAnonymouslySuccess: \(result?.user.uid ?? "N/A")")
-      }
-      catch {
-        print("SignInAnonymouslyError: \(error)")
-      }
-    }
-  }
 }
 
 #Preview {
-  LoginView()
+  LoginView(viewModel: LoginViewModel(dataService: CloudService.shared))
     .environmentObject(AuthManager())
 }

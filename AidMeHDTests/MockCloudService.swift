@@ -56,4 +56,13 @@ actor MockCloudService: ObservableObject, @preconcurrency AidMeDataService {
     self.household = decodedObject.household
     self.tasks = decodedObject.tasks
   }
+
+  func setNewUser(userId: String, completion: @escaping (Result<AidMeUser,Error>) -> Void) {
+    let newUser = AidMeUser(id: userId, householdId: UUID().uuidString)
+    completion(.success(newUser))
+  }
+
+  func signInUser(userId: String) {}
+
+  func signOutUser() {}
 }

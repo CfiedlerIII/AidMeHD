@@ -12,6 +12,7 @@ import SwiftUI
 @MainActor
 class TasksViewModel<DataService>: ObservableObject where DataService: AidMeDataService, DataService: ObservableObject {
   @ObservedObject var dataService: DataService
+  @Published var user: AidMeUser?
   @Published var tasks: [AidMeTask] = []
   private var cancellables: Set<AnyCancellable> = []
 
@@ -21,6 +22,13 @@ class TasksViewModel<DataService>: ObservableObject where DataService: AidMeData
       .receive(on: RunLoop.main)
       .sink { [weak self] updatedTasks in
         self?.tasks = updatedTasks
+      }
+      .store(in: &cancellables)
+
+    dataService.userPublisher
+      .receive(on: RunLoop.main)
+      .sink { [weak self] updatedUser in
+        self?.user = updatedUser
       }
       .store(in: &cancellables)
   }

@@ -117,6 +117,8 @@ struct AidMeModelTests {
         if user != nil {
           #expect(await user!.id == "0MFHz5Djh7grgTEhZMlVyFjZTRH2")
           #expect(await user!.householdId == "8e5aHNpCCbs1ShtHMYGc")
+          #expect(await user!.firstName == "Daniel")
+          #expect(await user!.lastName == "Ocean")
         }
       }
     }

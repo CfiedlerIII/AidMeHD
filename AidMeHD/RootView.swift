@@ -9,14 +9,20 @@ import SwiftUI
 
 struct RootView: View {
   @EnvironmentObject var authManager: AuthManager
+  @AppStorage("userId") var userId: String?
+  @State private var isLoading = true
+  let cloudService = CloudService.shared
 
   var body: some View {
-    VStack(spacing: 16) {
-      if authManager.authState != .signedOut {
-        HomeView()
-      } else {
-        LoginView()
-      }
+    ZStack {
+      HomeView()
+      ProgressView()
+        .opacity(isLoading ? 1 : 0)
+    }
+    .task {
+      isLoading = true
+      await self.cloudService.fetchData()
+      isLoading = false
     }
   }
 }
