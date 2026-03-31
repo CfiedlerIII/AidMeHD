@@ -9,16 +9,20 @@ import SwiftUI
 
 struct HomeView: View {
   @EnvironmentObject var authManager: AuthManager
-  @ObservedObject private var viewModel: TasksViewModel = .init(dataService: CloudService.shared)
+  @AppStorage("userId") var userId: String?
+  @StateObject private var viewModel: TasksViewModel = .init(dataService: CloudService.shared)
+  @StateObject private var loginViewModel: LoginViewModel = .init(dataService: CloudService.shared)
   @State private var showLoginSheet = false
   @State private var showDeleteAccountAlert = false
+
+  init() {}
 
   var body: some View {
     NavigationStack {
       VStack(spacing: 16) {
         VStack(alignment: .leading) {
           if authManager.authState == .signedIn {
-            Text(authManager.user?.displayName ?? "Name placeholder")
+            Text("\(loginViewModel.user?.firstName ?? "") \(loginViewModel.user?.lastName ?? "")")
               .font(.headline)
 
             Text(authManager.user?.email ?? "Email placeholder")
@@ -35,6 +39,16 @@ struct HomeView: View {
         .cornerRadius(12)
         .padding()
 
+        NavigationLink(destination: {
+          UserSearchView()
+        }, label: {
+          Text("Users")
+            .foregroundStyle(.black)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
+        })
+
         TaskListView(viewModel: viewModel)
           .overlay(
             RoundedRectangle(cornerRadius: 16)
@@ -49,9 +63,8 @@ struct HomeView: View {
           // Show `Sign out` if user is not anonymous,
           // otherwise show `Sign-in` to present LoginView() when tapped.
           Button {
-            if authManager.authState != .signedIn {
-              showLoginSheet = true
-            } else {
+            loginViewModel.showLoginSheet = true
+            if authManager.authState == .signedIn {
               signOut()
             }
           } label: {
@@ -81,8 +94,8 @@ struct HomeView: View {
       .background(.mint)
       .navigationTitle("Welcome")
 
-      .sheet(isPresented: $showLoginSheet) {
-        LoginView()
+      .sheet(isPresented: $loginViewModel.showLoginSheet) {
+        LoginView(viewModel: loginViewModel)
       }
       .confirmationDialog("Delete Account", isPresented: $showDeleteAccountAlert) {
         Button("Yes, Delete", role: .destructive) {
@@ -117,6 +130,7 @@ struct HomeView: View {
     Task {
       do {
         try await authManager.signOut()
+        loginViewModel.signOut()
       }
       catch {
         print("Error: \(error)")

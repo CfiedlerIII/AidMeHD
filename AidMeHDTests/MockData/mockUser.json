@@ -1,4 +1,7 @@
 {
   "id": "0MFHz5Djh7grgTEhZMlVyFjZTRH2",
-  "householdId": "8e5aHNpCCbs1ShtHMYGc"
+  "householdId": "8e5aHNpCCbs1ShtHMYGc",
+  "firstName": "Daniel",
+  "lastName": "Ocean",
+  "isSetupComplete": true
 }

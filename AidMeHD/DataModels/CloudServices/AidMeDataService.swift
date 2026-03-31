@@ -16,4 +16,8 @@ protocol AidMeDataService {
   var userPublisher: Published<AidMeUser?>.Publisher { get }
   var householdPublisher: Published<AidMeHousehold?>.Publisher { get }
   var taskPublisher: Published<[AidMeTask]>.Publisher { get }
+
+  func setNewUser(userId: String, completion: @escaping (Result<AidMeUser,Error>) -> Void)
+  func signInUser(userId: String)
+  func signOutUser()
 }

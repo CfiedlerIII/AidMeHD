@@ -17,6 +17,11 @@ actor AidMeHousehold: @preconcurrency Codable, Identifiable {
   nonisolated let id: String
   var memberIds: [String]
 
+  init(id: String, memberIds: [String]) {
+    self.id = id
+    self.memberIds = memberIds
+  }
+
   // Decodable init
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
